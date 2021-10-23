@@ -20,10 +20,15 @@
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
 
+import datetime
+from typing import List
 import config as cf
 import sys
 import controller
 from DISClib.ADT import list as lt
+from DISClib.ADT import orderedmap as om
+from DISClib.DataStructures import mapentry as me
+from DISClib.ADT import map as mp
 assert cf
 
 
@@ -37,7 +42,29 @@ operación solicitada
 def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
-    print("2- ")
+    print("2- Contar los avistamientos en una ciudad")
+    print("3- Contar los avistamientos por duración")
+    print("4- Contar avistamientos por Hora/Minutos del día")
+    print("5- Contar los avistamientos en un rango de fechas")
+    print("6- Contar los avistamientos de una Zona Geográfica")
+    print("7- Visualizar los avistamientos de una zona geográfica - BONO")
+    print("0- Salir")
+
+
+def initCatalog():
+    """
+    Inicializa el catalogo
+    """
+    return controller.initCatalog()
+
+
+
+def cargarData(catalog):
+    """
+    Carga la información en la estructura de datos
+    """
+    controller.cargarData(catalog)
+
 
 catalog = None
 
@@ -49,8 +76,51 @@ while True:
     inputs = input('Seleccione una opción para continuar\n')
     if int(inputs[0]) == 1:
         print("Cargando información de los archivos ....")
+        catalog = initCatalog()
+        cargarData(catalog)
+        print('\nTotal avistamientos cargados: ' + str(controller.avistamientosSize(catalog)))
+        print('Altura del arbol: ' + str(controller.indexHeight(catalog)))
+        print('Elementos en el arbol: ' + str(controller.indexSize(catalog)))
 
+        primerosUFOS = controller.primerosAvistamientos(catalog)
+        ultimosUFOS = controller.ultimosAvistamientos(catalog)
+        
+        print('Primeros cinco avistamientos cargados: \n')     
+        for avistamiento in lt.iterator(primerosUFOS):
+            print("\tFecha: ",avistamiento["datetime"])
+            print("\tCiudad: ",avistamiento["city"])
+            print("\tEstado: ",avistamiento["state"])
+            print("\tPaís: ",avistamiento["country"])
+            print("\tForma: ",avistamiento["shape"])
+            print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+
+        print('\nÚltimos cinco avistamientos cargados: \n')     
+        for avistamiento in lt.iterator(ultimosUFOS):
+            print("\tFecha: ",avistamiento["datetime"])
+            print("\tCiudad: ",avistamiento["city"])
+            print("\tEstado: ",avistamiento["state"])
+            print("\tPaís: ",avistamiento["country"])
+            print("\tForma: ",avistamiento["shape"])
+            print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+        
+
+        
     elif int(inputs[0]) == 2:
+        pass
+
+    elif int(inputs[0]) == 3:
+        pass
+
+    elif int(inputs[0]) == 4:
+        pass
+
+    elif int(inputs[0]) == 5:
+        pass
+
+    elif int(inputs[0]) == 6:
+        pass
+
+    elif int(inputs[0]) == 7:
         pass
 
     else:
