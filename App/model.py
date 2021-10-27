@@ -55,6 +55,8 @@ def newCatalog():
     catalog['UFOS'] = lt.newList('SINGLE_LINKED', compareDates)
     catalog['dateIndex'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
+    catalog['cityIndex'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareCities)
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -64,16 +66,17 @@ def addUFO(catalog, avistamiento):
     """
     lt.addLast(catalog['UFOS'], avistamiento)
     updateDateIndex(catalog['dateIndex'], avistamiento)
+    updateCityIndex(catalog['cityIndex'], avistamiento)
     return catalog
+
 
 
 def updateDateIndex(map, avistamiento):
     """
     Se toma la fecha del avistamiento y se busca si ya existe en el arbol
-    dicha fecha.  Si es asi, se adiciona a su lista de avistamientos
-    y se actualiza el indice de tipos de crimenes.
+    dicha fecha.  Si es asi, se adiciona a su lista de avistamientos.
     Si no se encuentra creado un nodo para esa fecha en el arbol
-    se crea y se actualiza el indice de tipos de crimenes
+    se crea uno
     """
     occurreddate = avistamiento['datetime']
     UFOdate = dt.datetime.strptime(occurreddate, '%Y-%m-%d %H:%M:%S')
@@ -85,6 +88,27 @@ def updateDateIndex(map, avistamiento):
         datentry = me.getValue(entry)
     addDateIndex(datentry, avistamiento)
     return map
+
+
+
+
+def updateCityIndex(map, avistamiento):
+    """
+    Se toma la ciudad del avistamiento y se busca si ya existe en el arbol
+    dicha ciudad.  Si es asi, se adiciona a su lista de avistamientos.
+    Si no se encuentra creado un nodo para esa ciudad en el arbol
+    se crea uno
+    """
+    city = avistamiento['city']
+    entry = om.get(map, city)
+    if entry is None:
+        datentry = newCityEntry(city)
+        om.put(map, city, datentry)
+    else:
+        datentry = me.getValue(entry)
+    addCityIndex(datentry, avistamiento)
+    return map
+
 
 
 
@@ -100,6 +124,23 @@ def addDateIndex(datentry, avistamiento):
     return datentry
 
 
+
+
+def addCityIndex(datentry, avistamiento):
+    """
+    Actualiza un indice.  Este indice tiene una lista
+    de avistamientos y una tabla de hash cuya llave es la fecha y
+    el valor es una lista con los avistamientos de dicho tipo en la ciudad que
+    se está consultando (dada por el nodo del arbol)
+    """
+    lst = datentry['lstCity']
+    lt.addLast(lst, avistamiento)
+    return datentry
+
+
+
+
+
 def newDataEntry(avistamiento):
     """
     Crea una entrada en el indice por fechas, es decir en el arbol
@@ -111,6 +152,17 @@ def newDataEntry(avistamiento):
     return entry
 
 
+
+
+def newCityEntry(city):
+    """
+    Crea una entrada en el indice por ciudad, es decir en el arbol
+    binario.
+    """
+    cityentry = {'city': None, 'lstCity': None}
+    cityentry['city'] = city
+    cityentry['lstCity'] = lt.newList('SINGLELINKED', compareCities)
+    return cityentry
 
 
 
@@ -131,14 +183,14 @@ def indexHeight(catalog):
     """
     Altura del arbol
     """
-    return om.height(catalog['dateIndex'])
+    return om.height(catalog)
 
 
 def indexSize(catalog):
     """
     Numero de elementos en el indice
     """
-    return om.size(catalog['dateIndex'])
+    return om.size(catalog)
 
 
 
@@ -166,7 +218,7 @@ def ultimosAvistamientos(catalog):
     """
     Retrona los últimos 5 avistamientos
     """
-    i = indexSize(catalog)-1
+    i = indexSize(catalog['dateIndex'])-1
     ultimosUFOS = lt.newList()
     while lt.size(ultimosUFOS) < 5:
         UFOkey = om.select(catalog['dateIndex'],i)
@@ -180,6 +232,32 @@ def ultimosAvistamientos(catalog):
                     break
         i-=1
     return ultimosUFOS
+
+
+
+
+
+def contarAvistamientosCiudad(catalog, ciudadIngresada):
+    """
+    Req 1: Cuenta los avistamientos de UFOS en una ciudad
+    """
+    tamanioCiudad = 0
+    totalCiudades = om.size(catalog['cityIndex'])
+    lstCiudades = lt.newList()
+    for cityKey in lt.iterator(om.keySet(catalog['cityIndex'])):
+        city = om.get(catalog['cityIndex'], cityKey)
+        if city:
+            lt.addLast(lstCiudades, (city,lt.size(me.getValue(city)["lstCity"])))
+    ordenada = ms.sort(lstCiudades,cmpCities)
+    TOP5ciudades = lt.subList(ordenada,1,5)
+    ciudad = om.get(catalog['cityIndex'], ciudadIngresada)
+    if ciudad:
+        ciudad = me.getValue(city)
+        tamanioCiudad = lt.size(ciudad["lstCity"])
+
+    return 0
+
+
 
 
 
@@ -210,6 +288,21 @@ def compareUFOS(UFO1, UFO2):
         return -1
 
 
+
+def compareCities(city1, city2):
+    """
+    Compara dos ciudades
+    """
+    city = city2
+    if (city1 == city):
+        return 0
+    elif (city1 > city):
+        return 1
+    else:
+        return -1
+
+
+
 def cmpUFOByDate(UFO1, UFO2):
     """
     Se obtiene verdadero si el UFO1 ocurre antes del UFO2
@@ -223,5 +316,12 @@ def cmpUFOByDateInverso(UFO1, UFO2):
     """
     return UFO1["datetime"]>UFO2["datetime"]
 
+
+
+def cmpCities(city1, city2):
+    """
+    Se obtiene verdadero si city 1 tiene más avistamientos que city2
+    """
+    return city1[1]>city2[1]
 
 # Funciones de ordenamiento

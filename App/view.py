@@ -43,11 +43,12 @@ def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
     print("2- Contar los avistamientos en una ciudad")
-    print("3- Contar los avistamientos por duración")
-    print("4- Contar avistamientos por Hora/Minutos del día")
-    print("5- Contar los avistamientos en un rango de fechas")
-    print("6- Contar los avistamientos de una Zona Geográfica")
-    print("7- Visualizar los avistamientos de una zona geográfica - BONO")
+    print("3- Datos característicos (altura y número de elementos) - Lab 8")
+    print("4- Contar los avistamientos por duración")
+    print("5- Contar avistamientos por Hora/Minutos del día")
+    print("6- Contar los avistamientos en un rango de fechas")
+    print("7- Contar los avistamientos de una Zona Geográfica")
+    print("8- Visualizar los avistamientos de una zona geográfica - BONO")
     print("0- Salir")
 
 
@@ -79,8 +80,6 @@ while True:
         catalog = initCatalog()
         cargarData(catalog)
         print('\nTotal avistamientos cargados: ' + str(controller.avistamientosSize(catalog)))
-        print('Altura del arbol: ' + str(controller.indexHeight(catalog)))
-        print('Elementos en el arbol: ' + str(controller.indexSize(catalog)))
 
         primerosUFOS = controller.primerosAvistamientos(catalog)
         ultimosUFOS = controller.ultimosAvistamientos(catalog)
@@ -106,10 +105,21 @@ while True:
 
         
     elif int(inputs[0]) == 2:
-        pass
+        ciudad = input("Ingrese el nombre de la ciudad a consultar: ")
+        result = controller.contarAvistamientosCiudad(catalog, ciudad)
 
     elif int(inputs[0]) == 3:
-        pass
+        print("Datos característicos: ")
+        print('\nTotal avistamientos cargados: ' + str(controller.avistamientosSize(catalog)))
+        print("Arbol fechas: ")
+        print('\tAltura del arbol: ' + str(controller.indexHeight(catalog['dateIndex'])))
+        print('\tElementos en el arbol: ' + str(controller.indexSize(catalog['dateIndex'])))
+        print("Arbol Ciudades: ")
+        print('\tAltura del arbol: ' + str(controller.indexHeight(catalog['cityIndex'])))
+        print('\tElementos en el arbol: ' + str(controller.indexSize(catalog['cityIndex'])))
+
+
+
 
     elif int(inputs[0]) == 4:
         pass

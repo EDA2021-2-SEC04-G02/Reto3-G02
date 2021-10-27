@@ -47,7 +47,7 @@ def cargarData(catalog):
     """
     Carga los datos de los archivos CSV en el modelo
     """
-    UFOSfile = cf.data_dir + 'UFOS-utf8-large.csv'
+    UFOSfile = cf.data_dir + 'UFOS-utf8-small.csv'
     input_file = csv.DictReader(open(UFOSfile, encoding='utf-8'),
                                 delimiter=",")
     for avistamiento in input_file:
@@ -93,3 +93,12 @@ def ultimosAvistamientos(catalog):
     Retrona los últimos 5 avistamientos
     """
     return model.ultimosAvistamientos(catalog)
+
+
+
+def contarAvistamientosCiudad(catalog, ciudad):
+    """
+    Cuenta los avistamientos de UFOS en una ciudad
+    """
+    result = model.contarAvistamientosCiudad(catalog, ciudad)
+    return result
