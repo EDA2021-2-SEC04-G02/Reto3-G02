@@ -47,7 +47,7 @@ def cargarData(catalog):
     """
     Carga los datos de los archivos CSV en el modelo
     """
-    UFOSfile = cf.data_dir + 'UFOS-utf8-small.csv'
+    UFOSfile = cf.data_dir + 'UFOS-utf8-large.csv'
     input_file = csv.DictReader(open(UFOSfile, encoding='utf-8'),
                                 delimiter=",")
     for avistamiento in input_file:
@@ -81,18 +81,18 @@ def indexSize(catalog):
 
 
 
-def primerosAvistamientos(catalog):
+def primerosAvistamientos(catalog, n):
     """
-    Retrona los primeros 5 avistamientos
+    Retrona los primeros n avistamientos
     """
-    return model.primerosAvistamientos(catalog)
+    return model.primerosAvistamientos(catalog, n)
 
 
-def ultimosAvistamientos(catalog):
+def ultimosAvistamientos(catalog, n):
     """
-    Retrona los últimos 5 avistamientos
+    Retrona los últimos n avistamientos
     """
-    return model.ultimosAvistamientos(catalog)
+    return model.ultimosAvistamientos(catalog, n)
 
 
 

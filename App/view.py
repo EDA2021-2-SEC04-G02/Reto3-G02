@@ -43,12 +43,11 @@ def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
     print("2- Contar los avistamientos en una ciudad")
-    print("3- Datos característicos (altura y número de elementos) - Lab 8")
-    print("4- Contar los avistamientos por duración")
-    print("5- Contar avistamientos por Hora/Minutos del día")
-    print("6- Contar los avistamientos en un rango de fechas")
-    print("7- Contar los avistamientos de una Zona Geográfica")
-    print("8- Visualizar los avistamientos de una zona geográfica - BONO")
+    print("3- Contar los avistamientos por duración")
+    print("4- Contar avistamientos por Hora/Minutos del día")
+    print("5- Contar los avistamientos en un rango de fechas")
+    print("6- Contar los avistamientos de una Zona Geográfica")
+    print("7- Visualizar los avistamientos de una zona geográfica - BONO")
     print("0- Salir")
 
 
@@ -67,6 +66,29 @@ def cargarData(catalog):
     controller.cargarData(catalog)
 
 
+
+
+def printReq1(result, ciudad):
+    print("Total de ciudades donde se han reportado avistamientos: ",result[0])
+    print("La ciudad con más avistamientos es: ")
+    print(me.getKey(result[1][0])," : ",result[1][1])
+    print("Total de avistamientos en la ciudad ",ciudad," : ",result[2])
+    print('Primeros tres avistamientos cargados: \n')     
+    for avistamiento in lt.iterator(result[3]):
+        print("\tFecha: ",avistamiento["datetime"])
+        print("\tCiudad: ",avistamiento["city"])
+        print("\tPaís: ",avistamiento["country"])
+        print("\tForma: ",avistamiento["shape"])
+        print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+    print('\nÚltimos tres avistamientos cargados: \n')     
+    for avistamiento in lt.iterator(result[4]):
+        print("\tFecha: ",avistamiento["datetime"])
+        print("\tCiudad: ",avistamiento["city"])
+        print("\tPaís: ",avistamiento["country"])
+        print("\tForma: ",avistamiento["shape"])
+        print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+
+
 catalog = None
 
 """
@@ -80,9 +102,10 @@ while True:
         catalog = initCatalog()
         cargarData(catalog)
         print('\nTotal avistamientos cargados: ' + str(controller.avistamientosSize(catalog)))
-
-        primerosUFOS = controller.primerosAvistamientos(catalog)
-        ultimosUFOS = controller.ultimosAvistamientos(catalog)
+        print('\tAltura del arbol: ' + str(controller.indexHeight(catalog['dateIndex'])))
+        print('\tElementos en el arbol: ' + str(controller.indexSize(catalog['dateIndex'])))
+        primerosUFOS = controller.primerosAvistamientos(catalog, 5)
+        ultimosUFOS = controller.ultimosAvistamientos(catalog, 5)
         
         print('Primeros cinco avistamientos cargados: \n')     
         for avistamiento in lt.iterator(primerosUFOS):
@@ -107,19 +130,10 @@ while True:
     elif int(inputs[0]) == 2:
         ciudad = input("Ingrese el nombre de la ciudad a consultar: ")
         result = controller.contarAvistamientosCiudad(catalog, ciudad)
+        printReq1(result, ciudad)
 
     elif int(inputs[0]) == 3:
-        print("Datos característicos: ")
-        print('\nTotal avistamientos cargados: ' + str(controller.avistamientosSize(catalog)))
-        print("Arbol fechas: ")
-        print('\tAltura del arbol: ' + str(controller.indexHeight(catalog['dateIndex'])))
-        print('\tElementos en el arbol: ' + str(controller.indexSize(catalog['dateIndex'])))
-        print("Arbol Ciudades: ")
-        print('\tAltura del arbol: ' + str(controller.indexHeight(catalog['cityIndex'])))
-        print('\tElementos en el arbol: ' + str(controller.indexSize(catalog['cityIndex'])))
-
-
-
+        pass
 
     elif int(inputs[0]) == 4:
         pass

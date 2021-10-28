@@ -55,8 +55,10 @@ def newCatalog():
     catalog['UFOS'] = lt.newList('SINGLE_LINKED', compareDates)
     catalog['dateIndex'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
-    catalog['cityIndex'] = om.newMap(omaptype='RBT',
-                                      comparefunction=compareCities)
+    catalog['cityIndex'] = mp.newMap(150,
+                                    maptype='CHAINING',
+                                    loadfactor=4.0,
+                                    comparefunction=compareCities)
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -100,10 +102,10 @@ def updateCityIndex(map, avistamiento):
     se crea uno
     """
     city = avistamiento['city']
-    entry = om.get(map, city)
+    entry = mp.get(map, city)
     if entry is None:
         datentry = newCityEntry(city)
-        om.put(map, city, datentry)
+        mp.put(map, city, datentry)
     else:
         datentry = me.getValue(entry)
     addCityIndex(datentry, avistamiento)
@@ -133,8 +135,7 @@ def addCityIndex(datentry, avistamiento):
     el valor es una lista con los avistamientos de dicho tipo en la ciudad que
     se está consultando (dada por el nodo del arbol)
     """
-    lst = datentry['lstCity']
-    lt.addLast(lst, avistamiento)
+    updateDateIndex(datentry['dateIndex'], avistamiento)
     return datentry
 
 
@@ -161,7 +162,8 @@ def newCityEntry(city):
     """
     cityentry = {'city': None, 'lstCity': None}
     cityentry['city'] = city
-    cityentry['lstCity'] = lt.newList('SINGLELINKED', compareCities)
+    cityentry['dateIndex'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareDates)
     return cityentry
 
 
@@ -194,42 +196,50 @@ def indexSize(catalog):
 
 
 
-def primerosAvistamientos(catalog):
+def primerosAvistamientos(catalog, n):
     """
-    Retrona los primeros 5 avistamientos
+    Retrona los primeros n avistamientos
     """
     i = 0
+    completa = False
     primerosUFOS = lt.newList()
-    while lt.size(primerosUFOS) < 5:
+    while lt.size(primerosUFOS) < n and not completa:
         UFOkey = om.select(catalog['dateIndex'],i)
-        UFO = om.get(catalog['dateIndex'], UFOkey)
-        if UFO:
-            lista = me.getValue(UFO)['lstUFOS']
-            lista = ms.sort(lista,cmpUFOByDate)
-            for a in lt.iterator(lista):
-                lt.addLast(primerosUFOS, a)
-                if lt.size(primerosUFOS) == 5:
-                    break
+        if UFOkey is None:
+            completa = True
+        else:
+            UFO = om.get(catalog['dateIndex'], UFOkey)
+            if UFO:
+                lista = me.getValue(UFO)['lstUFOS']
+                lista = ms.sort(lista,cmpUFOByDate)
+                for a in lt.iterator(lista):
+                    lt.addLast(primerosUFOS, a)
+                    if lt.size(primerosUFOS) == n:
+                        break
         i+=1
     return primerosUFOS
 
 
-def ultimosAvistamientos(catalog):
+def ultimosAvistamientos(catalog, n):
     """
-    Retrona los últimos 5 avistamientos
+    Retrona los últimos n avistamientos
     """
     i = indexSize(catalog['dateIndex'])-1
+    completa = False
     ultimosUFOS = lt.newList()
-    while lt.size(ultimosUFOS) < 5:
+    while lt.size(ultimosUFOS) < n and not completa:
         UFOkey = om.select(catalog['dateIndex'],i)
-        UFO = om.get(catalog['dateIndex'], UFOkey)
-        if UFO:
-            lista = me.getValue(UFO)['lstUFOS']
-            lista = ms.sort(lista, cmpUFOByDateInverso)
-            for a in lt.iterator(lista):
-                lt.addFirst(ultimosUFOS, a)
-                if lt.size(ultimosUFOS) == 5:
-                    break
+        if UFOkey is None:
+            completa = True
+        else:
+            UFO = om.get(catalog['dateIndex'], UFOkey)
+            if UFO:
+                lista = me.getValue(UFO)['lstUFOS']
+                lista = ms.sort(lista, cmpUFOByDateInverso)
+                for a in lt.iterator(lista):
+                    lt.addFirst(ultimosUFOS, a)
+                    if lt.size(ultimosUFOS) == n:
+                        break
         i-=1
     return ultimosUFOS
 
@@ -242,20 +252,21 @@ def contarAvistamientosCiudad(catalog, ciudadIngresada):
     Req 1: Cuenta los avistamientos de UFOS en una ciudad
     """
     tamanioCiudad = 0
-    totalCiudades = om.size(catalog['cityIndex'])
+    totalCiudades = mp.size(catalog['cityIndex'])
     lstCiudades = lt.newList()
-    for cityKey in lt.iterator(om.keySet(catalog['cityIndex'])):
-        city = om.get(catalog['cityIndex'], cityKey)
+    for cityKey in lt.iterator(mp.keySet(catalog['cityIndex'])):
+        city = mp.get(catalog['cityIndex'], cityKey)
         if city:
-            lt.addLast(lstCiudades, (city,lt.size(me.getValue(city)["lstCity"])))
+            lt.addLast(lstCiudades, (city,om.size(me.getValue(city)["dateIndex"])))
     ordenada = ms.sort(lstCiudades,cmpCities)
-    TOP5ciudades = lt.subList(ordenada,1,5)
-    ciudad = om.get(catalog['cityIndex'], ciudadIngresada)
+    TOPciudad = lt.getElement(ordenada,1)
+    ciudad = mp.get(catalog['cityIndex'], ciudadIngresada)
     if ciudad:
-        ciudad = me.getValue(city)
-        tamanioCiudad = lt.size(ciudad["lstCity"])
-
-    return 0
+        ciudad = me.getValue(ciudad)
+        primeros = primerosAvistamientos(ciudad, 3)
+        ultimos = ultimosAvistamientos(ciudad, 3)
+        tamanioCiudad = om.size(ciudad["dateIndex"])
+    return totalCiudades, TOPciudad, tamanioCiudad, primeros, ultimos
 
 
 
@@ -293,7 +304,7 @@ def compareCities(city1, city2):
     """
     Compara dos ciudades
     """
-    city = city2
+    city = me.getKey(city2)
     if (city1 == city):
         return 0
     elif (city1 > city):
