@@ -69,18 +69,39 @@ def cargarData(catalog):
 
 
 def printReq1(result, ciudad):
-    print("Total de ciudades donde se han reportado avistamientos: ",result[0])
-    print("La ciudad con más avistamientos es: ")
+    print("\nTotal de ciudades donde se han reportado avistamientos: ",result[0])
+    print("\nLa ciudad con más avistamientos es: \n")
     print(me.getKey(result[1][0])," : ",result[1][1])
-    print("Total de avistamientos en la ciudad ",ciudad," : ",result[2])
-    print('Primeros tres avistamientos cargados: \n')     
+    print("\nTotal de avistamientos en la ciudad ",ciudad," : ",result[2])
+    print('\nPrimeros tres avistamientos: \n')     
     for avistamiento in lt.iterator(result[3]):
         print("\tFecha: ",avistamiento["datetime"])
         print("\tCiudad: ",avistamiento["city"])
         print("\tPaís: ",avistamiento["country"])
         print("\tForma: ",avistamiento["shape"])
         print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
-    print('\nÚltimos tres avistamientos cargados: \n')     
+    print('\nÚltimos tres avistamientos: \n')     
+    for avistamiento in lt.iterator(result[4]):
+        print("\tFecha: ",avistamiento["datetime"])
+        print("\tCiudad: ",avistamiento["city"])
+        print("\tPaís: ",avistamiento["country"])
+        print("\tForma: ",avistamiento["shape"])
+        print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+
+
+
+def printReq3(result):
+    print("\nEl avistamiento más tardío que se tiene registrado es: \n")
+    print(result[0]," : ",result[1])
+    print("\nEn el rango de horas ingresado por el usuario hay un total de ",result[2]," avistamientos. ")
+    print('Primeros tres avistamientos: \n')     
+    for avistamiento in lt.iterator(result[3]):
+        print("\tFecha: ",avistamiento["datetime"])
+        print("\tCiudad: ",avistamiento["city"])
+        print("\tPaís: ",avistamiento["country"])
+        print("\tForma: ",avistamiento["shape"])
+        print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+    print('\nÚltimos tres avistamientos: \n')     
     for avistamiento in lt.iterator(result[4]):
         print("\tFecha: ",avistamiento["datetime"])
         print("\tCiudad: ",avistamiento["city"])
@@ -102,12 +123,12 @@ while True:
         catalog = initCatalog()
         cargarData(catalog)
         print('\nTotal avistamientos cargados: ' + str(controller.avistamientosSize(catalog)))
-        print('\tAltura del arbol: ' + str(controller.indexHeight(catalog['dateIndex'])))
-        print('\tElementos en el arbol: ' + str(controller.indexSize(catalog['dateIndex'])))
+        print('Altura del arbol: ' + str(controller.indexHeight(catalog['dateIndex'])))
+        print('Elementos en el arbol: ' + str(controller.indexSize(catalog['dateIndex'])))
         primerosUFOS = controller.primerosAvistamientos(catalog, 5)
         ultimosUFOS = controller.ultimosAvistamientos(catalog, 5)
         
-        print('Primeros cinco avistamientos cargados: \n')     
+        print('\nPrimeros cinco avistamientos cargados: \n')     
         for avistamiento in lt.iterator(primerosUFOS):
             print("\tFecha: ",avistamiento["datetime"])
             print("\tCiudad: ",avistamiento["city"])
@@ -136,7 +157,13 @@ while True:
         pass
 
     elif int(inputs[0]) == 4:
-        pass
+        print("Para el rango de horas del día del que quiera listar los avistamientos ingrese: ")
+        horaInicial = int(input("Hora inicial del rango: "))
+        minutoInicial = int(input("Minuto inicial del rango: "))
+        horaFinal = int(input("Hora final del rango: "))
+        minutoFinal = int(input("Minuto final del rango: "))
+        result = controller.contarAvistamientosHora(catalog,horaInicial,minutoInicial,horaFinal,minutoFinal)
+        printReq3(result)
 
     elif int(inputs[0]) == 5:
         pass

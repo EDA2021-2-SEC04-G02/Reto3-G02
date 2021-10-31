@@ -18,6 +18,6 @@ Este directorio contiene las pruebas realizadas a los TADs, Estructuras de Datos
 
 Grupo 2 Sección 4
 
-Req 3- Daniel Rodriguez - ds.rodriguezf1@uniandes.edu.co - 202014760
+Req 2- Daniel Rodriguez - ds.rodriguezf1@uniandes.edu.co - 202014760
 
-Req 4- Santiago Forero - s.forerog2@uniandes.edu.co - 202111446
+Req 3- Santiago Forero - s.forerog2@uniandes.edu.co - 202111446

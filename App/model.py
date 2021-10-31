@@ -25,6 +25,7 @@
  """
 
 
+from DISClib.DataStructures.arraylist import iterator
 import config as cf
 import datetime as dt
 from DISClib.ADT import list as lt
@@ -59,6 +60,8 @@ def newCatalog():
                                     maptype='CHAINING',
                                     loadfactor=4.0,
                                     comparefunction=compareCities)
+    catalog['hourIndex'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareHours)
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -69,6 +72,7 @@ def addUFO(catalog, avistamiento):
     lt.addLast(catalog['UFOS'], avistamiento)
     updateDateIndex(catalog['dateIndex'], avistamiento)
     updateCityIndex(catalog['cityIndex'], avistamiento)
+    updateHourIndex(catalog['hourIndex'], avistamiento)
     return catalog
 
 
@@ -114,6 +118,29 @@ def updateCityIndex(map, avistamiento):
 
 
 
+
+
+def updateHourIndex(map, avistamiento):
+    """
+    Se toma la hora del avistamiento y se busca si ya existe en el arbol
+    dicha fecha.  Si es asi, se adiciona a su lista de avistamientos.
+    Si no se encuentra creado un nodo para esa hora en el arbol
+    se crea uno
+    """
+    occurredhour = avistamiento['datetime']
+    UFOhour = dt.datetime.strptime(occurredhour, '%Y-%m-%d %H:%M:%S')
+    entry = om.get(map, UFOhour.time())
+    if entry is None:
+        datentry = newDataEntry(UFOhour.time())
+        om.put(map, UFOhour.time(), datentry)
+    else:
+        datentry = me.getValue(entry)
+    addHourIndex(datentry, avistamiento)
+    return map
+
+
+
+
 def addDateIndex(datentry, avistamiento):
     """
     Actualiza un indice.  Este indice tiene una lista
@@ -141,10 +168,22 @@ def addCityIndex(datentry, avistamiento):
 
 
 
+def addHourIndex(datentry, avistamiento):
+    """
+    Actualiza un indice.  Este indice tiene una lista
+    de avistamientos y una tabla de hash cuya llave es la hora y
+    el valor es una lista con los avistamientos de dicho tipo en la hora que
+    se está consultando (dada por el nodo del arbol)
+    """
+    lst = datentry['lstUFOS']
+    lt.addLast(lst, avistamiento)
+    return datentry
+
+
 
 def newDataEntry(avistamiento):
     """
-    Crea una entrada en el indice por fechas, es decir en el arbol
+    Crea una entrada en el indice por fechas u horas, es decir en el arbol
     binario.
     """
     entry = {'name': None, 'lstUFOS': None}
@@ -272,6 +311,35 @@ def contarAvistamientosCiudad(catalog, ciudadIngresada):
 
 
 
+def contarAvistamientosHora(catalog,horaInicial,minutoInicial,horaFinal,minutoFinal):
+    """
+    Req 3 (Individual): Cuenta los avistamientos en un rango de horas
+    """
+    timeMasTardeKey = om.maxKey(catalog["hourIndex"])
+    timeMasTarde = om.get(catalog["hourIndex"],timeMasTardeKey)
+    cantTimeMasTarde =lt.size(me.getValue(timeMasTarde)["lstUFOS"])
+    
+    timeInicial = dt.time(horaInicial,minutoInicial)
+    timeFinal = dt.time(horaFinal,minutoFinal)
+    llaveInicial = om.ceiling(catalog["hourIndex"], timeInicial)
+    llaveFinal = om.floor(catalog["hourIndex"], timeFinal)
+    avistamientos = om.values(catalog["hourIndex"],llaveInicial,llaveFinal)
+    
+    totalUFOS = lt.newList()
+    for UFO in lt.iterator(avistamientos):
+        lista = UFO['lstUFOS']
+        lista = ms.sort(lista,cmpUFOByDate)
+        for a in lt.iterator(lista):
+            lt.addLast(totalUFOS, a)
+    
+    cantTotalUFOS = lt.size(totalUFOS)
+    primerosUFOS = lt.subList(totalUFOS,1,3)
+    ultimosUFOS = lt.subList(totalUFOS, cantTotalUFOS-2, 3)
+
+    return timeMasTardeKey, cantTimeMasTarde, cantTotalUFOS, primerosUFOS, ultimosUFOS
+
+
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 def compareDates(date1, date2):
@@ -312,6 +380,18 @@ def compareCities(city1, city2):
     else:
         return -1
 
+
+
+def compareHours(hour1, hour2):
+    """
+    Compara dos horas
+    """
+    if (hour1 == hour2):
+        return 0
+    elif (hour1 > hour2):
+        return 1
+    else:
+        return -1
 
 
 def cmpUFOByDate(UFO1, UFO2):
