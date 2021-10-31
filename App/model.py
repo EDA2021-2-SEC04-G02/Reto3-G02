@@ -28,6 +28,7 @@
 from DISClib.DataStructures.arraylist import iterator
 import config as cf
 import datetime as dt
+import time
 from DISClib.ADT import list as lt
 from DISClib.ADT import orderedmap as om
 from DISClib.ADT import map as mp
@@ -292,19 +293,21 @@ def contarAvistamientosCiudad(catalog, ciudadIngresada):
     """
     tamanioCiudad = 0
     totalCiudades = mp.size(catalog['cityIndex'])
-    lstCiudades = lt.newList()
+    TOPciudad = (None,0)
     for cityKey in lt.iterator(mp.keySet(catalog['cityIndex'])):
         city = mp.get(catalog['cityIndex'], cityKey)
         if city:
-            lt.addLast(lstCiudades, (city,om.size(me.getValue(city)["dateIndex"])))
-    ordenada = ms.sort(lstCiudades,cmpCities)
-    TOPciudad = lt.getElement(ordenada,1)
+            city = (city,om.size(me.getValue(city)["dateIndex"]))
+            if city[1] > TOPciudad[1]:
+                TOPciudad = city
+    
     ciudad = mp.get(catalog['cityIndex'], ciudadIngresada)
     if ciudad:
         ciudad = me.getValue(ciudad)
         primeros = primerosAvistamientos(ciudad, 3)
         ultimos = ultimosAvistamientos(ciudad, 3)
         tamanioCiudad = om.size(ciudad["dateIndex"])
+    
     return totalCiudades, TOPciudad, tamanioCiudad, primeros, ultimos
 
 
@@ -325,16 +328,36 @@ def contarAvistamientosHora(catalog,horaInicial,minutoInicial,horaFinal,minutoFi
     llaveFinal = om.floor(catalog["hourIndex"], timeFinal)
     avistamientos = om.values(catalog["hourIndex"],llaveInicial,llaveFinal)
     
-    totalUFOS = lt.newList()
+    cantTotalUFOS = 0
+    for UFO in lt.iterator(avistamientos):
+        lista = UFO['lstUFOS']
+        cantTotalUFOS += lt.size(lista)
+
+    primerosUFOS = lt.newList()
     for UFO in lt.iterator(avistamientos):
         lista = UFO['lstUFOS']
         lista = ms.sort(lista,cmpUFOByDate)
         for a in lt.iterator(lista):
-            lt.addLast(totalUFOS, a)
-    
-    cantTotalUFOS = lt.size(totalUFOS)
-    primerosUFOS = lt.subList(totalUFOS,1,3)
-    ultimosUFOS = lt.subList(totalUFOS, cantTotalUFOS-2, 3)
+            lt.addLast(primerosUFOS, a)
+            if lt.size(primerosUFOS) == 3:
+                break
+        if lt.size(primerosUFOS) == 3:
+            break
+
+    i = lt.size(avistamientos)
+    completa = False
+    ultimosUFOS = lt.newList()
+    while lt.size(ultimosUFOS) < 3 and not completa:
+        UFO = lt.getElement(avistamientos,i)['lstUFOS']
+        if UFO:
+            UFO = ms.sort(UFO, cmpUFOByDateInverso)
+            for a in lt.iterator(UFO):
+                lt.addFirst(ultimosUFOS, a)
+                if lt.size(ultimosUFOS) == 3:
+                    break
+        else:
+            completa = True
+        i-=1
 
     return timeMasTardeKey, cantTimeMasTarde, cantTotalUFOS, primerosUFOS, ultimosUFOS
 
