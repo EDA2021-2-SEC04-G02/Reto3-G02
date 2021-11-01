@@ -110,6 +110,34 @@ def printReq3(result):
         print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
 
 
+
+
+
+
+def printReq4(result):
+    print("\nEl avistamiento más antiguo que se tiene registrado es: \n")
+    print(result[0]," : ",result[1])
+    print("\nEn el rango de fechas ingresado por el usuario hay un total de ",result[2]," avistamientos. ")
+    print('Primeros tres avistamientos: \n')     
+    for avistamiento in lt.iterator(result[3]):
+        print("\tFecha: ",avistamiento["datetime"])
+        print("\tCiudad: ",avistamiento["city"])
+        print("\tPaís: ",avistamiento["country"])
+        print("\tForma: ",avistamiento["shape"])
+        print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+    print('\nÚltimos tres avistamientos: \n')     
+    for avistamiento in lt.iterator(result[4]):
+        print("\tFecha: ",avistamiento["datetime"])
+        print("\tCiudad: ",avistamiento["city"])
+        print("\tPaís: ",avistamiento["country"])
+        print("\tForma: ",avistamiento["shape"])
+        print("\tDuración (segundos): ",avistamiento["duration (seconds)"],"\n")
+
+
+
+
+
+
 catalog = None
 
 """
@@ -166,10 +194,24 @@ while True:
         printReq3(result)
 
     elif int(inputs[0]) == 5:
-        pass
+        print("Para el rango de fechas del que quiera listar los avistamientos ingrese: ")
+        diaInicial = int(input("Día inicial del rango: "))
+        mesInicial = int(input("Mes inicial del rango: "))
+        anioInicial = int(input("Hora inicial del rango: "))
+        diaFinal = int(input("Día final del rango: "))
+        mesFinal = int(input("Mes final del rango: "))
+        anioFinal = int(input("Hora final del rango: "))
+        result = controller.contarAvistamientosDia(catalog,diaInicial,mesInicial,anioInicial,diaFinal,mesFinal,anioFinal)
+        printReq4(result)
 
     elif int(inputs[0]) == 6:
-        pass
+        print("Para la zona geográfica de la que quiera listar los avistamientos ingrese: ")
+        longInicial = float(input("Longitud mínima del rango: "))
+        longFinal = float(input("Longitud máxima del rango: "))
+        latInicial = float(input("Latitud mínima del rango: "))
+        latFinal = float(input("Latitud máxima del rango: "))
+        result = controller.contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal)
+        printReq3(result)
 
     elif int(inputs[0]) == 7:
         pass

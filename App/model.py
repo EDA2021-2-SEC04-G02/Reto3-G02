@@ -51,7 +51,10 @@ def newCatalog():
     Retorna el analizador inicializado.
     """
     catalog = {'UFOS': None,
-                'dateIndex': None
+                'dateIndex': None,
+                'cityIndex': None,
+                'hourIndex': None,
+                'longitudeIndex' : None
                 }
 
     catalog['UFOS'] = lt.newList('SINGLE_LINKED', compareDates)
@@ -63,6 +66,8 @@ def newCatalog():
                                     comparefunction=compareCities)
     catalog['hourIndex'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareHours)
+    catalog['longitudeIndex'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareLongitude)
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -74,6 +79,7 @@ def addUFO(catalog, avistamiento):
     updateDateIndex(catalog['dateIndex'], avistamiento)
     updateCityIndex(catalog['cityIndex'], avistamiento)
     updateHourIndex(catalog['hourIndex'], avistamiento)
+    updateLongitudeIndex(catalog['longitudeIndex'], avistamiento)
     return catalog
 
 
@@ -142,6 +148,47 @@ def updateHourIndex(map, avistamiento):
 
 
 
+
+def updateLongitudeIndex(map, avistamiento):
+    """
+    Se toma la longitud del avistamiento y se busca si ya existe en el arbol
+    dicha longitud.  Si es asi, se adiciona a su lista de avistamientos.
+    Si no se encuentra creado un nodo para esa longitud en el arbol
+    se crea uno
+    """
+    longitude = round(float(avistamiento['longitude']),2)
+    entry = om.get(map, longitude)
+    if entry is None:
+        datentry = newLongitudeEntry(longitude)
+        om.put(map, longitude, datentry)
+    else:
+        datentry = me.getValue(entry)
+    addLongitudeIndex(datentry, avistamiento)
+    return map
+
+
+
+
+
+def updateLatitudeIndex(map, avistamiento):
+    """
+    Se toma la latitud del avistamiento y se busca si ya existe en el arbol
+    dicha latitud.  Si es asi, se adiciona a su lista de avistamientos.
+    Si no se encuentra creado un nodo para esa latitud en el arbol
+    se crea uno
+    """
+    latitude = round(float(avistamiento['latitude']),2)
+    entry = om.get(map, latitude)
+    if entry is None:
+        datentry = newLatitudeEntry(latitude)
+        om.put(map, latitude, datentry)
+    else:
+        datentry = me.getValue(entry)
+    addLatitudeIndex(datentry, avistamiento)
+    return map
+
+
+
 def addDateIndex(datentry, avistamiento):
     """
     Actualiza un indice.  Este indice tiene una lista
@@ -182,6 +229,35 @@ def addHourIndex(datentry, avistamiento):
 
 
 
+
+def addLongitudeIndex(datentry, avistamiento):
+    """
+    Actualiza un indice.  Este indice tiene una lista
+    de avistamientos y una tabla de hash cuya llave es la longitud y
+    el valor es un mapa con la latitud como llave y valor los avistamientos de
+    la longitud que se está consultando (dada por el nodo del arbol)
+    """
+    updateLatitudeIndex(datentry['latitudeIndex'], avistamiento)
+    return datentry
+
+
+
+
+
+def addLatitudeIndex(datentry, avistamiento):
+    """
+    Actualiza un indice.  Este indice tiene una lista
+    de avistamientos y una tabla de hash cuya llave es la latitud y
+    el valor es una lista con los avistamientos de dicho tipo en la latitud que
+    se está consultando (dada por el nodo del arbol)
+    """
+    lst = datentry['lstUFOS']
+    lt.addLast(lst, avistamiento)
+    return datentry
+
+
+
+
 def newDataEntry(avistamiento):
     """
     Crea una entrada en el indice por fechas u horas, es decir en el arbol
@@ -200,11 +276,39 @@ def newCityEntry(city):
     Crea una entrada en el indice por ciudad, es decir en el arbol
     binario.
     """
-    cityentry = {'city': None, 'lstCity': None}
+    cityentry = {'city': None, 'dateIndex': None}
     cityentry['city'] = city
     cityentry['dateIndex'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     return cityentry
+
+
+
+
+
+def newLongitudeEntry(longitude):
+    """
+    Crea una entrada en el indice por ciudad, es decir en el arbol
+    binario.
+    """
+    longitudentry = {'longitude': None, 'latitudeIndex': None}
+    longitudentry['longitude'] = longitude
+    longitudentry['latitudeIndex'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareLatitude)
+    return longitudentry
+
+
+
+
+def newLatitudeEntry(latitude):
+    """
+    Crea una entrada en el indice por ciudad, es decir en el arbol
+    binario.
+    """
+    latitudentry = {'latitude': None, 'lstUFOS': None}
+    latitudentry['latitude'] = latitude
+    latitudentry['lstUFOS'] = lt.newList('SINGLE_LINKED', compareDates)
+    return latitudentry
 
 
 
@@ -363,6 +467,84 @@ def contarAvistamientosHora(catalog,horaInicial,minutoInicial,horaFinal,minutoFi
 
 
 
+
+
+
+def contarAvistamientosDia(catalog,diaInicial,mesInicial,anioInicial,diaFinal,mesFinal,anioFinal):
+    """
+    Req 4: Cuenta los avistamientos en un rango de fechas
+    """
+    dateMasTardeKey = om.minKey(catalog["dateIndex"])
+    dateMasTarde = om.get(catalog["dateIndex"],dateMasTardeKey)
+    cantDateMasTarde =lt.size(me.getValue(dateMasTarde)["lstUFOS"])
+    
+    dateInicial = dt.date(anioInicial,mesInicial,diaInicial)
+    dateFinal = dt.date(anioFinal,mesFinal,diaFinal)
+    llaveInicial = om.ceiling(catalog["dateIndex"], dateInicial)
+    llaveFinal = om.floor(catalog["dateIndex"], dateFinal)
+    avistamientos = om.values(catalog["dateIndex"],llaveInicial,llaveFinal)
+    
+    cantTotalUFOS = 0
+    for UFO in lt.iterator(avistamientos):
+        lista = UFO['lstUFOS']
+        cantTotalUFOS += lt.size(lista)
+
+    primerosUFOS = lt.newList()
+    for UFO in lt.iterator(avistamientos):
+        lista = UFO['lstUFOS']
+        lista = ms.sort(lista,cmpUFOByDate)
+        for a in lt.iterator(lista):
+            lt.addLast(primerosUFOS, a)
+            if lt.size(primerosUFOS) == 3:
+                break
+        if lt.size(primerosUFOS) == 3:
+            break
+
+    i = lt.size(avistamientos)
+    completa = False
+    ultimosUFOS = lt.newList()
+    while lt.size(ultimosUFOS) < 3 and not completa:
+        UFO = lt.getElement(avistamientos,i)['lstUFOS']
+        if UFO:
+            UFO = ms.sort(UFO, cmpUFOByDateInverso)
+            for a in lt.iterator(UFO):
+                lt.addFirst(ultimosUFOS, a)
+                if lt.size(ultimosUFOS) == 3:
+                    break
+        else:
+            completa = True
+        i-=1
+
+    return dateMasTardeKey, cantDateMasTarde, cantTotalUFOS, primerosUFOS, ultimosUFOS
+
+
+
+
+
+
+
+def contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal):
+    """
+    Req 5: Cuenta los avistamientos en un rango de longitudes y latitudes
+    """
+    if longInicial >= longFinal:
+        copia = longFinal
+        longFinal = longInicial
+        longInicial = copia
+    llaveInicialLong = om.ceiling(catalog["longitudeIndex"], longInicial)
+    llaveFinalLong = om.floor(catalog["longitudeIndex"], longFinal)
+    if llaveInicialLong and llaveFinalLong:
+        rangoLong = om.values(catalog["longitudeIndex"],llaveInicialLong,llaveFinalLong)
+        
+            
+
+
+
+
+
+
+
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 
 def compareDates(date1, date2):
@@ -415,6 +597,33 @@ def compareHours(hour1, hour2):
         return 1
     else:
         return -1
+
+
+
+def compareLongitude(lon1, lon2):
+    """
+    Compara dos longitudes
+    """
+    if (lon1 == lon2):
+        return 0
+    elif (lon1 > lon2):
+        return 1
+    else:
+        return -1
+
+
+
+def compareLatitude(lat1, lat2):
+    """
+    Compara dos latitudes
+    """
+    if (lat1 == lat2):
+        return 0
+    elif (lat1 > lat2):
+        return 1
+    else:
+        return -1
+
 
 
 def cmpUFOByDate(UFO1, UFO2):
