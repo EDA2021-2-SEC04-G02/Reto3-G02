@@ -47,7 +47,7 @@ def cargarData(catalog):
     """
     Carga los datos de los archivos CSV en el modelo
     """
-    UFOSfile = cf.data_dir + 'UFOS-utf8-small.csv'
+    UFOSfile = cf.data_dir + 'UFOS-utf8-large.csv'
     input_file = csv.DictReader(open(UFOSfile, encoding='utf-8'),
                                 delimiter=",")
     for avistamiento in input_file:
@@ -132,4 +132,15 @@ def contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal):
     Cuenta los avistamientos en un rango de longitudes y latitudes
     """
     result = model.contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal)
+    return result
+
+
+
+
+
+def contarAvistamientosZonaGraficar(catalog,longInicial,latInicial,longFinal,latFinal):
+    """
+    Cuenta los avistamientos en un rango de longitudes y latitudes, y grafica.
+    """
+    result = model.contarAvistamientosZonaGraficar(catalog,longInicial,latInicial,longFinal,latFinal)
     return result

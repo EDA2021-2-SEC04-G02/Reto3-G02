@@ -135,6 +135,28 @@ def printReq4(result):
 
 
 
+def printReq5(result):
+    print("\nEl total de avistamientos dentro del área definida es: ",result[0],"\n")
+    print('Primeros cinco avistamientos: \n')     
+    for avistamiento in range(1,6):
+        print("\tFecha: ",lt.getElement(result[1], avistamiento)["datetime"])
+        print("\tCiudad: ",lt.getElement(result[1], avistamiento)["city"])
+        print("\tPaís: ",lt.getElement(result[1], avistamiento)["country"])
+        print("\tForma: ",lt.getElement(result[1], avistamiento)["shape"])
+        print("\tDuración (segundos): ",lt.getElement(result[1], avistamiento)["duration (seconds)"])
+        print("\tLongitud: ",lt.getElement(result[1], avistamiento)["longitude"])
+        print("\tLatitud: ",lt.getElement(result[1], avistamiento)["latitude"],"\n")
+    print('\nÚltimos cinco avistamientos: \n')     
+    for avistamiento in range(0,5):
+        print("\tFecha: ",lt.getElement(result[1], result[0] - avistamiento)["datetime"])
+        print("\tCiudad: ",lt.getElement(result[1], result[0] - avistamiento)["city"])
+        print("\tPaís: ",lt.getElement(result[1], result[0] - avistamiento)["country"])
+        print("\tForma: ",lt.getElement(result[1], result[0] - avistamiento)["shape"])
+        print("\tDuración (segundos): ",lt.getElement(result[1], result[0] - avistamiento)["duration (seconds)"])
+        print("\tLongitud: ",lt.getElement(result[1], result[0] - avistamiento)["longitude"])
+        print("\tLatitud: ",lt.getElement(result[1], result[0] - avistamiento)["latitude"],"\n")
+
+
 
 
 
@@ -197,24 +219,30 @@ while True:
         print("Para el rango de fechas del que quiera listar los avistamientos ingrese: ")
         diaInicial = int(input("Día inicial del rango: "))
         mesInicial = int(input("Mes inicial del rango: "))
-        anioInicial = int(input("Hora inicial del rango: "))
+        anioInicial = int(input("Año inicial del rango: "))
         diaFinal = int(input("Día final del rango: "))
         mesFinal = int(input("Mes final del rango: "))
-        anioFinal = int(input("Hora final del rango: "))
+        anioFinal = int(input("Año final del rango: "))
         result = controller.contarAvistamientosDia(catalog,diaInicial,mesInicial,anioInicial,diaFinal,mesFinal,anioFinal)
         printReq4(result)
 
     elif int(inputs[0]) == 6:
         print("Para la zona geográfica de la que quiera listar los avistamientos ingrese: ")
-        longInicial = float(input("Longitud mínima del rango: "))
-        longFinal = float(input("Longitud máxima del rango: "))
-        latInicial = float(input("Latitud mínima del rango: "))
-        latFinal = float(input("Latitud máxima del rango: "))
+        longInicial = round(float(input("Longitud mínima del rango: ")), 2)
+        longFinal = round(float(input("Longitud máxima del rango: ")), 2)
+        latInicial = round(float(input("Latitud mínima del rango: ")), 2)
+        latFinal = round(float(input("Latitud máxima del rango: ")), 2)
         result = controller.contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal)
-        printReq3(result)
+        printReq5(result)
 
     elif int(inputs[0]) == 7:
-        pass
+        print("Para la zona geográfica de la que quiera listar los avistamientos ingrese: ")
+        longInicial = round(float(input("Longitud mínima del rango: ")), 2)
+        longFinal = round(float(input("Longitud máxima del rango: ")), 2)
+        latInicial = round(float(input("Latitud mínima del rango: ")), 2)
+        latFinal = round(float(input("Latitud máxima del rango: ")), 2)
+        result = controller.contarAvistamientosZonaGraficar(catalog,longInicial,latInicial,longFinal,latFinal)
+        print("Se generó el archivo HTML, puede verse en la carpeta Reto3-G02")
 
     else:
         sys.exit(0)

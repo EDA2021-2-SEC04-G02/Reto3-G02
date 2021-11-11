@@ -21,3 +21,10 @@ Grupo 2 Sección 4
 Req 2- Daniel Rodriguez - ds.rodriguezf1@uniandes.edu.co - 202014760
 
 Req 3- Santiago Forero - s.forerog2@uniandes.edu.co - 202111446
+
+
+
+
+Aclaración Requerimiento 6
+
+Después de correr el requerimiento 6 se podrá encontrar el archivo HTML del mapa en la carpeta Reto3-G02, donde posteriormente se podrá abrir en cualquier navegador.

@@ -29,6 +29,7 @@ from DISClib.DataStructures.arraylist import iterator
 import config as cf
 import datetime as dt
 import time
+import folium
 from DISClib.ADT import list as lt
 from DISClib.ADT import orderedmap as om
 from DISClib.ADT import map as mp
@@ -395,6 +396,7 @@ def contarAvistamientosCiudad(catalog, ciudadIngresada):
     """
     Req 1: Cuenta los avistamientos de UFOS en una ciudad
     """
+    start_time = time.process_time()
     tamanioCiudad = 0
     totalCiudades = mp.size(catalog['cityIndex'])
     TOPciudad = (None,0)
@@ -411,7 +413,9 @@ def contarAvistamientosCiudad(catalog, ciudadIngresada):
         primeros = primerosAvistamientos(ciudad, 3)
         ultimos = ultimosAvistamientos(ciudad, 3)
         tamanioCiudad = om.size(ciudad["dateIndex"])
-    
+    stop_time = time.process_time()
+    elapsed_time_mseg = (stop_time - start_time)*1000
+    print("Req 1: ",elapsed_time_mseg)
     return totalCiudades, TOPciudad, tamanioCiudad, primeros, ultimos
 
 
@@ -422,6 +426,7 @@ def contarAvistamientosHora(catalog,horaInicial,minutoInicial,horaFinal,minutoFi
     """
     Req 3 (Individual): Cuenta los avistamientos en un rango de horas
     """
+    start_time = time.process_time()
     timeMasTardeKey = om.maxKey(catalog["hourIndex"])
     timeMasTarde = om.get(catalog["hourIndex"],timeMasTardeKey)
     cantTimeMasTarde =lt.size(me.getValue(timeMasTarde)["lstUFOS"])
@@ -463,6 +468,9 @@ def contarAvistamientosHora(catalog,horaInicial,minutoInicial,horaFinal,minutoFi
             completa = True
         i-=1
 
+    stop_time = time.process_time()
+    elapsed_time_mseg = (stop_time - start_time)*1000
+    print("Req 3: ",elapsed_time_mseg)
     return timeMasTardeKey, cantTimeMasTarde, cantTotalUFOS, primerosUFOS, ultimosUFOS
 
 
@@ -474,6 +482,7 @@ def contarAvistamientosDia(catalog,diaInicial,mesInicial,anioInicial,diaFinal,me
     """
     Req 4: Cuenta los avistamientos en un rango de fechas
     """
+    start_time = time.process_time()
     dateMasTardeKey = om.minKey(catalog["dateIndex"])
     dateMasTarde = om.get(catalog["dateIndex"],dateMasTardeKey)
     cantDateMasTarde =lt.size(me.getValue(dateMasTarde)["lstUFOS"])
@@ -515,6 +524,9 @@ def contarAvistamientosDia(catalog,diaInicial,mesInicial,anioInicial,diaFinal,me
             completa = True
         i-=1
 
+    stop_time = time.process_time()
+    elapsed_time_mseg = (stop_time - start_time)*1000
+    print("Req 4: ",elapsed_time_mseg)
     return dateMasTardeKey, cantDateMasTarde, cantTotalUFOS, primerosUFOS, ultimosUFOS
 
 
@@ -527,19 +539,53 @@ def contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal):
     """
     Req 5: Cuenta los avistamientos en un rango de longitudes y latitudes
     """
+    start_time = time.process_time()
+    avistamientos = lt.newList(datastructure='ARRAY_LIST')
     if longInicial >= longFinal:
-        copia = longFinal
+        copia1 = longFinal
         longFinal = longInicial
-        longInicial = copia
+        longInicial = copia1
     llaveInicialLong = om.ceiling(catalog["longitudeIndex"], longInicial)
     llaveFinalLong = om.floor(catalog["longitudeIndex"], longFinal)
     if llaveInicialLong and llaveFinalLong:
         rangoLong = om.values(catalog["longitudeIndex"],llaveInicialLong,llaveFinalLong)
-        
+        if lt.size(rangoLong) > 0:
+            if latInicial >= latFinal:
+                copia2 = latFinal
+                latFinal = latInicial
+                latInicial = copia2
+            for long in lt.iterator(rangoLong):
+                llaveInicialLat = om.ceiling(long["latitudeIndex"], latInicial)
+                llaveFinalLat = om.floor(long["latitudeIndex"], latFinal)
+                if llaveInicialLat and llaveFinalLat:
+                    rangoLat = om.values(long["latitudeIndex"],llaveInicialLat,llaveFinalLat)
+                    for lat in lt.iterator(rangoLat):
+                        for avistamiento in lt.iterator(lat["lstUFOS"]):
+                            lt.addLast(avistamientos,avistamiento)
+    tamanio = lt.size(avistamientos)
+    stop_time = time.process_time()
+    elapsed_time_mseg = (stop_time - start_time)*1000
+    print("Req 5: ",elapsed_time_mseg)
+    return tamanio, avistamientos
             
 
 
 
+
+def contarAvistamientosZonaGraficar(catalog,longInicial,latInicial,longFinal,latFinal):
+    """
+    Req 6: Cuenta los avistamientos en un rango de longitudes y latitudes, y grafica.
+    """
+    start_time = time.process_time()
+    result = contarAvistamientosZona(catalog,longInicial,latInicial,longFinal,latFinal)
+    m = folium.Map()
+    for avistamiento in lt.iterator(result[1]):
+        folium.Marker(location=[avistamiento["latitude"], avistamiento["longitude"]]).add_to(m)
+    m.save("mapaUFOS.html")
+    stop_time = time.process_time()
+    elapsed_time_mseg = (stop_time - start_time)*1000
+    print("Req 6: ",elapsed_time_mseg)
+    return None
 
 
 
